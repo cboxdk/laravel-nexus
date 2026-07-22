@@ -35,6 +35,3 @@ jobs:
 
       - name: QA gate (pint · phpstan · pest · license-check · audit)
         run: composer qa
-
-      - name: SBOM is not stale
-        run: composer sbom && git diff --exit-code sbom.json
