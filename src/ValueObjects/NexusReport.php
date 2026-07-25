@@ -48,6 +48,20 @@ readonly class NexusReport
         return $this->withStatus(NexusStatus::Registered);
     }
 
+    /**
+     * States whose threshold could not be resolved, so no standing could be determined.
+     *
+     * Surfaced as its own bucket because it is an operational fault, not a nexus outcome: every
+     * state landing here usually means the threshold dataset is unreachable, and a report that
+     * folds them in with genuine `Below` results looks like a clean bill of health.
+     *
+     * @return list<NexusEvaluation>
+     */
+    public function unknown(): array
+    {
+        return $this->withStatus(NexusStatus::Unknown);
+    }
+
     public function forState(string $state): ?NexusEvaluation
     {
         foreach ($this->evaluations as $evaluation) {

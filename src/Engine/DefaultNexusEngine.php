@@ -71,17 +71,36 @@ readonly class DefaultNexusEngine implements NexusEngine
             );
         }
 
-        if ($threshold === null || $activity === null) {
+        // An UNRESOLVABLE THRESHOLD is not the same as being below one. The threshold source is
+        // remote, so a firewalled or misconfigured deployment resolves null for every state — and
+        // reporting `Below` there reads as "no obligation" when the honest answer is "unknown".
+        // A seller could cross every threshold in the country and see a clean board.
+        if ($threshold === null) {
+            return new NexusEvaluation(
+                $state,
+                NexusStatus::Unknown,
+                null,
+                $activity,
+                $this->progress(null, $activity),
+                false,
+                sprintf(
+                    'No economic-nexus threshold is available for %s, so nexus cannot be evaluated. '
+                    .'Check the threshold dataset is reachable.',
+                    $state->value,
+                ),
+            );
+        }
+
+        // No ACTIVITY, by contrast, is a real and confident answer: nothing was sold there.
+        if ($activity === null) {
             return new NexusEvaluation(
                 $state,
                 NexusStatus::Below,
                 $threshold,
-                $activity,
-                $this->progress($threshold, $activity),
+                null,
+                $this->progress($threshold, null),
                 false,
-                $threshold === null
-                    ? sprintf('No economic-nexus threshold known for %s.', $state->value)
-                    : sprintf('No recorded activity in %s.', $state->value),
+                sprintf('No recorded activity in %s.', $state->value),
             );
         }
 

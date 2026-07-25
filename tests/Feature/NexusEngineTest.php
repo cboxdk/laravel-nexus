@@ -70,12 +70,29 @@ it('reports registered when the seller already holds a registration', function (
     expect($engine->evaluate(state('US-NY'))->status)->toBe(NexusStatus::Registered);
 });
 
-it('denies by default with no threshold or no activity', function () {
-    $noThreshold = $this->nexusEngine(activity: ['US-CA' => $this->activity(9_000_000)]);
-    $noActivity = $this->nexusEngine(thresholds: ['US-CA' => $this->salesThreshold(100_000)]);
+// An unresolvable THRESHOLD and an absence of ACTIVITY are different answers and must not share
+// a status. "No threshold known" is the engine not knowing; "no activity" is a confident nothing.
+//
+// This matters because the threshold source is remote: a firewalled or misconfigured self-hosted
+// deployment resolves null for EVERY state. Reporting `Below` there showed a clean board while the
+// seller crossed thresholds nationwide and under-collected sales tax, with no signal anywhere.
+it('reports unknown — not below — when the threshold cannot be resolved', function () {
+    $engine = $this->nexusEngine(activity: ['US-CA' => $this->activity(9_000_000)]);
 
-    expect($noThreshold->evaluate(state('US-CA'))->status)->toBe(NexusStatus::Below)
-        ->and($noActivity->evaluate(state('US-CA'))->status)->toBe(NexusStatus::Below);
+    $evaluation = $engine->evaluate(state('US-CA'));
+
+    expect($evaluation->status)->toBe(NexusStatus::Unknown)
+        ->and($evaluation->status->needsAction())->toBeTrue()
+        ->and($evaluation->reason)->toContain('cannot be evaluated');
+});
+
+it('reports below when the threshold is known and there is simply no activity', function () {
+    $engine = $this->nexusEngine(thresholds: ['US-CA' => $this->salesThreshold(100_000)]);
+
+    $evaluation = $engine->evaluate(state('US-CA'));
+
+    expect($evaluation->status)->toBe(NexusStatus::Below)
+        ->and($evaluation->status->needsAction())->toBeFalse();
 });
 
 it('honours the combinator for sales-or-transactions and sales-and-transactions', function () {
