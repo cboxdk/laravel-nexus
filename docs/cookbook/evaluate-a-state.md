@@ -19,6 +19,26 @@ if ($e->needsAction()) {
 $e->progress; // e.g. 0.92 — 92% toward the threshold
 ```
 
-`evaluate()` never throws for an unknown state — it returns `Below` with a reason
-("No economic-nexus threshold known…"), so a caller can rely on a status always
-coming back.
+`evaluate()` never throws — a status always comes back. But note what it returns
+when it *cannot answer*: **`NexusStatus::Unknown`, not `Below`**, with a reason
+naming the seam that came up empty (an unreachable threshold dataset, a ledger
+that cannot answer, or totals counted on a different basis than the state
+measures).
+
+`Unknown` returns `needsAction() === true`. Branch on the status rather than
+treating any non-`Triggered` result as a clean bill of health:
+
+```php
+use Cbox\Nexus\Enums\NexusStatus;
+
+match ($e->status) {
+    NexusStatus::Triggered     => $this->startRegistration($e),
+    NexusStatus::Unknown       => $this->alertOperator($e->reason),  // a fault, not a verdict
+    NexusStatus::NotApplicable => null,                              // DE/MT/NH/OR — nothing to do
+    default                    => null,
+};
+```
+
+A verdict may also be *qualified* — `$e->isQualified()` is true when the engine
+could not verify something it relied on, with the details in `$e->caveats`. See
+[the decision model](../core-concepts/nexus-status.md).

@@ -16,13 +16,30 @@ period. This is the seller's side of the equation — the package cannot know it
 
 ```php
 use Cbox\Nexus\Contracts\SalesLedger;
+use Cbox\Nexus\ValueObjects\ActivityQuery;
 use Cbox\Nexus\ValueObjects\SellerActivity;
-use Cbox\Geo\ValueObjects\SubdivisionCode;
 
 app()->singleton(SalesLedger::class, fn () => new class implements SalesLedger {
-    public function activityFor(SubdivisionCode $state): ?SellerActivity { /* from invoices */ }
+    public function activityFor(ActivityQuery $query): ?SellerActivity { /* from invoices */ }
 });
 ```
+
+The query carries the state's own terms — `basis`, `period`, and `windows()` giving
+the concrete dates — so the sum can be run without looking the state's rules up
+separately.
+
+### Serving more than one seller
+
+`$query->subject` names who the question is about. It is null when the host serves a
+single seller, which is the common case and needs nothing.
+
+If you serve several and the subject is null, **return null**; the engine reports
+that as `Unknown`. Do not fall back on the current request or a container-scoped
+singleton. A queued job or a long-lived worker carries whoever was served last, so
+that fallback returns one seller's totals for another seller's state — silently,
+and across a tenant boundary. `PhysicalNexus` and `NexusRegistrations` take the same
+subject under the same rule; of the three a wrongly-claimed registration is the
+worst, because it turns an outstanding obligation into a handled one on a dashboard.
 
 ## PhysicalNexus
 
