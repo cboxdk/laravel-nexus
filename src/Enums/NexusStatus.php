@@ -34,6 +34,19 @@ enum NexusStatus: string
      */
     case Unknown = 'unknown';
 
+    /**
+     * The state levies no general sales tax, so there is no threshold to cross and
+     * nothing to register for. Delaware, Montana, New Hampshire and Oregon.
+     *
+     * Distinct from {@see Unknown} for the same reason Unknown is distinct from
+     * {@see Below}. Folding a positive "there is nothing to comply with here" into
+     * "I could not find out" puts four permanent action items on every healthy
+     * install, each telling the operator to go check a network that is fine — and
+     * an alarm that cries wolf four times a day is one people learn to scroll
+     * past, which quietly reopens the gap Unknown was added to close.
+     */
+    case NotApplicable = 'not_applicable';
+
     /** Whether this status means the seller should act (register / verify). */
     public function needsAction(): bool
     {
