@@ -6,6 +6,7 @@ namespace Cbox\Nexus\Testing;
 
 use Cbox\Geo\ValueObjects\SubdivisionCode;
 use Cbox\Nexus\Contracts\PhysicalNexus;
+use Cbox\Nexus\ValueObjects\NexusSubject;
 
 /**
  * An in-memory {@see PhysicalNexus} — the states the seller has asserted physical
@@ -24,7 +25,8 @@ readonly class ArrayPhysicalNexus implements PhysicalNexus
         $this->states = $states;
     }
 
-    public function hasPresenceIn(SubdivisionCode $state): bool
+    /** Holds one seller's assertions, so the subject is accepted and ignored. */
+    public function hasPresenceIn(SubdivisionCode $state, ?NexusSubject $subject = null): bool
     {
         return in_array($state->value, $this->states, true);
     }

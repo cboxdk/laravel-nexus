@@ -7,6 +7,8 @@ namespace Cbox\Nexus\Contracts;
 use Cbox\Geo\ValueObjects\SubdivisionCode;
 use Cbox\Nexus\ValueObjects\NexusEvaluation;
 use Cbox\Nexus\ValueObjects\NexusReport;
+use Cbox\Nexus\ValueObjects\NexusSubject;
+use DateTimeImmutable;
 
 /**
  * Evaluates a seller's economic-nexus standing. It owns the DECISION logic
@@ -17,10 +19,24 @@ use Cbox\Nexus\ValueObjects\NexusReport;
  */
 interface NexusEngine
 {
-    public function evaluate(SubdivisionCode $state): NexusEvaluation;
+    /**
+     * `$subject` names WHO is being evaluated and is carried into every host-owned
+     * seam; it is null when the host serves a single seller. `$asOf` moves the
+     * question to a date other than today — a filing prepared in arrears asks about
+     * the period it covers, not about now.
+     */
+    public function evaluate(
+        SubdivisionCode $state,
+        ?NexusSubject $subject = null,
+        ?DateTimeImmutable $asOf = null,
+    ): NexusEvaluation;
 
     /**
      * @param  list<SubdivisionCode>  $states
      */
-    public function report(array $states): NexusReport;
+    public function report(
+        array $states,
+        ?NexusSubject $subject = null,
+        ?DateTimeImmutable $asOf = null,
+    ): NexusReport;
 }

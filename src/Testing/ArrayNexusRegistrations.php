@@ -6,6 +6,7 @@ namespace Cbox\Nexus\Testing;
 
 use Cbox\Geo\ValueObjects\SubdivisionCode;
 use Cbox\Nexus\Contracts\NexusRegistrations;
+use Cbox\Nexus\ValueObjects\NexusSubject;
 
 /**
  * An in-memory {@see NexusRegistrations} — the states the seller already holds a
@@ -24,7 +25,8 @@ readonly class ArrayNexusRegistrations implements NexusRegistrations
         $this->states = $states;
     }
 
-    public function isRegisteredIn(SubdivisionCode $state): bool
+    /** Holds one seller's registrations, so the subject is accepted and ignored. */
+    public function isRegisteredIn(SubdivisionCode $state, ?NexusSubject $subject = null): bool
     {
         return in_array($state->value, $this->states, true);
     }

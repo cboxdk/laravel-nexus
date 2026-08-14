@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Cbox\Nexus\Testing;
 
 use Cbox\Nexus\Contracts\NexusEngine;
+use Cbox\Nexus\Contracts\SalesLedger;
 use Cbox\Nexus\Engine\DefaultNexusEngine;
 use Cbox\Nexus\Enums\NexusCombinator;
 use Cbox\Nexus\ValueObjects\EconomicNexusThreshold;
@@ -22,6 +23,8 @@ trait InteractsWithNexus
      * @param  array<string, SellerActivity>  $activity  state => cumulative activity
      * @param  list<string>  $physical  states with physical presence
      * @param  list<string>  $registered  states already registered
+     * @param  list<string>  $noSalesTax  states that levy no general sales tax
+     * @param  SalesLedger|null  $ledger  a ledger of your own, when the array one will not do
      */
     protected function nexusEngine(
         array $thresholds = [],
@@ -29,10 +32,12 @@ trait InteractsWithNexus
         array $physical = [],
         array $registered = [],
         float $approachingRatio = 0.8,
+        array $noSalesTax = [],
+        ?SalesLedger $ledger = null,
     ): NexusEngine {
         return new DefaultNexusEngine(
-            new ArrayNexusThresholdSource($thresholds),
-            new ArraySalesLedger($activity),
+            new ArrayNexusThresholdSource($thresholds, $noSalesTax),
+            $ledger ?? new ArraySalesLedger($activity),
             new ArrayPhysicalNexus($physical),
             new ArrayNexusRegistrations($registered),
             $approachingRatio,
